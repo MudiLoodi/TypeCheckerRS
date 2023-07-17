@@ -2,10 +2,6 @@ module AbSyn
 
 type Binop = Plus | Minus | Times | Divide | Less | Greater | Equal
 
-type Value =
-    | IntVal of int
-    | StrVal of string
-
 type Exp = 
     | Num of int
     | Var of string
