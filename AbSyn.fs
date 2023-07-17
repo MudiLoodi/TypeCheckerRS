@@ -12,7 +12,7 @@ type Exp =
     | App of Exp * Exp
 
 type Type = 
-    | High
     | Low
+    | High
     | OK
     | Arr of Type * Type // t1 -> t2

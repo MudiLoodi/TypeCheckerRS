@@ -75,11 +75,15 @@ let ifexp = If (cond, exp, exp1)
 
 let f = Fun(Var "H_x", ifexp) *)
 
-let exp = Let (Var "a", Var "H_b")
+(* let exp1 = Let (Var "H_a", Num 5)
+let exp2 = Let (Var "b", Num 6)
 
+let cond = Operate (Greater, Var "H_y", Num 0)
+
+let ifexp = If (cond, exp1, exp2) *)
 // let filePath = "p"
 // let program = readAndParseLinesFromFile filePath
-
+let exp = Let (Var("H_a"), Var("x"))
 let program = [exp]
 
 let finalTenv =
