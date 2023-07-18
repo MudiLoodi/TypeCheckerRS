@@ -47,16 +47,24 @@ let rec hastype tenv exp expectedType =
             t1 && t2
         | _ -> false
 
-    (* | App (e1, e2) ->
+    | App (e1, e2) ->
         match expectedType with 
-        | High -> 
-            let t1 = hastype tenv e1 (Arr (High, High))
+        | High -> // if t2 is high, then e1 can either be high -> high or low -> high
+            let t1 = hastype tenv e1 (Arr (High, High)) || hastype tenv e1 (Arr (Low, High))
             let t2 = hastype tenv e2 High
             t1 && t2
         | Low -> 
-            let t1 = hastype tenv e1 (Arr (Low, Low))
+            let t1 = hastype tenv e1 (Arr (Low, Low)) || hastype tenv e1 (Arr (High, Low))
             let t2 = hastype tenv e2 Low
-            t1 && t2 *)
+            t1 && t2
+        | _ -> false
 
+    | Fun (e1, e2) ->
+        match expectedType with 
+        | Arr(expt1, expt2) -> 
+            let t1 = hastype tenv e1 expt1 
+            let t2 = hastype tenv e2 expt2
+            t1 && t2
+        | _ -> false
 
-    // | Fun (e1, e2) -> true
+    

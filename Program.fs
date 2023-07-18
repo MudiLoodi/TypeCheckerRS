@@ -95,4 +95,4 @@ let (TypeEnv EnvLst) = finalTenv
 
 
 for e in program do
-    printfn "%A" (hastype finalTenv e OK)
+    printfn "%A" (hastype finalTenv e )
