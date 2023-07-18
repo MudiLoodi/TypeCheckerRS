@@ -83,8 +83,13 @@ let cond = Operate (Greater, Var "H_y", Num 0)
 let ifexp = If (cond, exp1, exp2) *)
 // let filePath = "p"
 // let program = readAndParseLinesFromFile filePath
-let exp = Let (Var("H_a"), Var("x"))
-let program = [exp]
+
+let exp1 = Let (Var "H_a", Num 5)
+let exp2 = Let (Var "H_b", Num 6)
+let cond = Operate (Greater, Var "y", Num 0)
+let ifexp = If (cond, exp1, exp2)
+let f = Fun(Var "H_x", ifexp)
+let program = [f;ifexp;cond;exp1;exp2]
 
 let finalTenv =
     program
@@ -95,4 +100,4 @@ let (TypeEnv EnvLst) = finalTenv
 
 
 for e in program do
-    printfn "%A" (hastype finalTenv e )
+    printfn "%A" (hastype finalTenv e (Arr(High, High)))

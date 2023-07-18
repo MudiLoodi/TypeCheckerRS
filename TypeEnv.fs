@@ -46,3 +46,7 @@ let rec bindExp e (TypeEnv envtab) =
         let res1 = bindExp e1 (TypeEnv envtab)
         let res2 = bindExp e2 res1
         res2
+    | While (e1, e2) -> 
+        let res1 = bindExp e1 (TypeEnv envtab)
+        let res2 = bindExp e2 res1
+        res2

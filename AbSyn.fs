@@ -10,6 +10,7 @@ type Exp =
     | If of Exp * Exp * Exp 
     | Fun of Exp * Exp
     | App of Exp * Exp
+    | While of Exp * Exp
 
 type Type = 
     | Low

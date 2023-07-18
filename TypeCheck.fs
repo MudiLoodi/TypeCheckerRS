@@ -6,6 +6,10 @@ open AbSyn
 open Lexer
 let rec hastype tenv exp expectedType =
     match exp with 
+    | Num n -> 
+        match expectedType with
+        | Low -> true
+        | _ -> false
     | Var(e1) -> 
         let foundtype = lookup e1 tenv 
         match foundtype, expectedType with
@@ -14,6 +18,7 @@ let rec hastype tenv exp expectedType =
     | Operate (op, e1, e2) -> 
         match expectedType with
         | High -> 
+            let t1 = hastype tenv e1 High 
             let t1 = hastype tenv e1 High 
             let t2 = hastype tenv e2 High 
             t1 || t2
@@ -25,13 +30,13 @@ let rec hastype tenv exp expectedType =
 
     | Let (e1, e2) -> 
         match expectedType with 
-        | OK -> 
+        | High -> 
             let t1 = hastype tenv e1 High 
-            if t1 then true // if e1 is high then we are done.
-            elif not t1 then // if e1 is low check if e2 is also low
-                let t2 = hastype tenv e2 Low
-                not t1 && t2
-            else false
+            t1 // if e1 is high then we are done.
+        | Low -> 
+            let t1 = hastype tenv e1 High 
+            let t2 = hastype tenv e2 Low
+            not t1 && t2
         | _ -> false
 
     | If (e1, e2, e3) ->
@@ -43,8 +48,7 @@ let rec hastype tenv exp expectedType =
             t1 && t2 && t3
         | Low -> 
             let t1 = hastype tenv e1 Low 
-            let t2 = hastype tenv e2 Low
-            t1 && t2
+            t1 
         | _ -> false
 
     | App (e1, e2) ->
@@ -67,4 +71,13 @@ let rec hastype tenv exp expectedType =
             t1 && t2
         | _ -> false
 
-    
+    | While (e1, e2) -> 
+        match expectedType with 
+        | OK -> 
+            let t1 = hastype tenv e1 Low 
+            if t1 then true 
+            elif not t1 then 
+                let t2 = hastype tenv e2 High
+                not t1 && t2
+            else false
+        | _ -> false
