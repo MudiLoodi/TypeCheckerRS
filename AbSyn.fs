@@ -12,7 +12,7 @@ type Exp =
     | App of Exp * Exp
     | While of Exp * Exp
     | Record of (string * Exp) list // Nested record type to hold mulitple fields
-    | RecDot of Exp
+    | RecDot of Exp * string
 
 type Type = 
     | Low

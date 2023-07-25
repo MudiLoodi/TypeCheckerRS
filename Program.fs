@@ -70,7 +70,14 @@ let rec findtype tenv exp =
         | (High, High) -> OK
         | (Low, _) -> OK
         | _ -> raise(MyError("While placeholder err"))
-
+    | RecDot (e1, f) -> 
+        let res = lookup f tenv
+        match res with
+            | High  -> High
+            | Low   -> Low
+            | OK -> OK
+            | Arr (t1, t2) -> Arr (t1, t2)
+            
 (* let exp = Let (Var "y", Num 10)
 let exp1 = Let (Var "a", Num 5)
 let exp2 = Let (Var "b", Num 6)
@@ -96,8 +103,11 @@ let cond = Operate (Greater, Var "y", Num 0)
 let ifexp = If (cond, exp1, exp2)
 let f = Fun(Var "H_x", ifexp) *)
 
-let r = Record [("CPR", Var "H_a"); ("ASD", Num 12)]
-let program = [r]
+let r = Record [("CPR", Var "a"); ("ASD", Num 12)]
+let dot = RecDot (r, "CPR")
+
+let v = Let (Var "H_a", dot)
+let program = [r; dot; v]
 
 let finalTenv =
     program
@@ -106,6 +116,5 @@ let finalTenv =
 
 let (TypeEnv EnvLst) = finalTenv
 
-printfn "%A" finalTenv
-(* for e in program do
-    printfn "%A" (hastype finalTenv e High) *)
+for e in program do
+    printfn "%A" (hastype finalTenv e Low)

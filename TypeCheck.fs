@@ -81,11 +81,10 @@ let rec hastype tenv exp expectedType =
                 not t1 && t2
             else false
         | _ -> false
-    | RecDot (e1) -> 
-        match expectedType with 
-        | High ->
-            let t1 = hastype tenv e1 High
-            t1
-        | Low ->
-            let t1 = hastype tenv e1 Low
-            t1
+
+    | Record (fields) -> 
+           true
+    | RecDot (e1, f) -> 
+        let foundtype = lookup f tenv 
+        match foundtype, expectedType with
+            | t1, t2 -> t1 = t2
