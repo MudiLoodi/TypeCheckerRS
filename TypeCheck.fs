@@ -65,7 +65,7 @@ let rec hastype tenv exp expectedType =
 
     | Fun (e1, e2) ->
         match expectedType with 
-        | Arr(expt1, expt2) -> 
+        | Arr (expt1, expt2) -> 
             let t1 = hastype tenv e1 expt1 
             let t2 = hastype tenv e2 expt2
             t1 && t2
@@ -81,3 +81,11 @@ let rec hastype tenv exp expectedType =
                 not t1 && t2
             else false
         | _ -> false
+    | RecDot (e1) -> 
+        match expectedType with 
+        | High ->
+            let t1 = hastype tenv e1 High
+            t1
+        | Low ->
+            let t1 = hastype tenv e1 Low
+            t1

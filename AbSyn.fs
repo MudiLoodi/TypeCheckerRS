@@ -11,9 +11,12 @@ type Exp =
     | Fun of Exp * Exp
     | App of Exp * Exp
     | While of Exp * Exp
+    | Record of (string * Exp) list // Nested record type to hold mulitple fields
+    | RecDot of Exp
 
 type Type = 
     | Low
     | High
     | OK
     | Arr of Type * Type // t1 -> t2
+    | Rec of Exp * Type // fields are Exp (Var)

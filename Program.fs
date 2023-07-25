@@ -63,7 +63,13 @@ let rec findtype tenv exp =
         match (e1_type, e2_type) with 
             | (Arr(t1, t2), t1') -> if t1 = t1' then t2 else raise (MyError("Invalid Types."))
             | _ -> raise(MyError("App placeholder err"))
-
+    | While (e1, e2) -> 
+        let e1_type = findtype tenv e1
+        let e2_type = findtype tenv e2
+        match (e1_type, e2_type) with 
+        | (High, High) -> OK
+        | (Low, _) -> OK
+        | _ -> raise(MyError("While placeholder err"))
 
 (* let exp = Let (Var "y", Num 10)
 let exp1 = Let (Var "a", Num 5)
@@ -84,12 +90,14 @@ let ifexp = If (cond, exp1, exp2) *)
 // let filePath = "p"
 // let program = readAndParseLinesFromFile filePath
 
-let exp1 = Let (Var "H_a", Num 5)
+(* let exp1 = Let (Var "H_a", Num 5)
 let exp2 = Let (Var "H_b", Num 6)
 let cond = Operate (Greater, Var "y", Num 0)
 let ifexp = If (cond, exp1, exp2)
-let f = Fun(Var "H_x", ifexp)
-let program = [f;ifexp;cond;exp1;exp2]
+let f = Fun(Var "H_x", ifexp) *)
+
+let r = Record [("CPR", Var "H_a"); ("ASD", Num 12)]
+let program = [r]
 
 let finalTenv =
     program
@@ -98,6 +106,6 @@ let finalTenv =
 
 let (TypeEnv EnvLst) = finalTenv
 
-
-for e in program do
-    printfn "%A" (hastype finalTenv e (Arr(High, High)))
+printfn "%A" finalTenv
+(* for e in program do
+    printfn "%A" (hastype finalTenv e High) *)
