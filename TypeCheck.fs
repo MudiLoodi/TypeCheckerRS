@@ -4,6 +4,9 @@ open System.IO
 open TypeEnv
 open AbSyn
 open Lexer
+
+exception MyError of string
+
 let rec hastype tenv exp expectedType =
     match exp with 
     | Num n -> 
@@ -19,7 +22,6 @@ let rec hastype tenv exp expectedType =
         match expectedType with
         | High -> 
             let t1 = hastype tenv e1 High 
-            let t1 = hastype tenv e1 High 
             let t2 = hastype tenv e2 High 
             t1 || t2
         | Low -> 
@@ -32,12 +34,14 @@ let rec hastype tenv exp expectedType =
         match expectedType with 
         | High -> 
             let t1 = hastype tenv e1 High 
-            t1 // if e1 is high then we are done.
+            if t1 then t1 else raise (MyError ("High err"))
         | Low -> 
             let t1 = hastype tenv e1 High 
             let t2 = hastype tenv e2 Low
-            not t1 && t2
-        | _ -> false
+            let res = not t1 && t2
+            //if res then res else raise (MyError ("Illegal explicit flow at " + $"%A{e1}")) 
+            res
+        | _ -> raise (MyError ("asd"))
 
     | If (e1, e2, e3) ->
         match expectedType with 

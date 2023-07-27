@@ -2,11 +2,16 @@
 
 open System.IO
 open TypeEnv
-open AbSyn
 open Lexer
 open TypeCheck
+open AbSyn
 
 exception MyError of string
+
+let customErrorMessage (errorType: string) (expr: Exp) =
+    match expr with
+    | Let (Var var1, Var var2) -> sprintf "%s in 'let %s = %s'" errorType var1 var2
+    | _ -> sprintf "%s" errorType 
 
 let readAndParseLinesFromFile (filePath: string) =
     let lines = new ResizeArray<Exp>()
@@ -38,10 +43,9 @@ let rec findtype tenv exp =
         let e1_type = findtype tenv e1
         let e2_type = findtype tenv e2
         match(e1_type, e2_type) with 
-            | (High, _)     -> High
-            | (Low, Low)    -> Low
-            | (Low, OK)     -> Low
-            | (Low, High)   ->  raise (MyError ($"Illegal explicit flow to %A{e1}"))
+            | (High, _) -> High
+            | (Low, _) ->  Low
+            | _ -> Low
     | If (e1, e2, e3) ->
         let e1_type = findtype tenv e1
         let e2_type = findtype tenv e2
@@ -94,20 +98,19 @@ let exp2 = Let (Var "b", Num 6)
 let cond = Operate (Greater, Var "H_y", Num 0)
 
 let ifexp = If (cond, exp1, exp2) *)
-// let filePath = "p"
-// let program = readAndParseLinesFromFile filePath
-
+let filePath = "p"
+let program = readAndParseLinesFromFile filePath
 (* let exp1 = Let (Var "H_a", Num 5)
 let exp2 = Let (Var "H_b", Num 6)
 let cond = Operate (Greater, Var "y", Num 0)
 let ifexp = If (cond, exp1, exp2)
-let f = Fun(Var "H_x", ifexp) *)
+let f = Fun(Var "H_x", ifexp) // High -> Low *)
 
-let r = Record [("CPR", Var "a"); ("ASD", Num 12)]
+(* let r = Record [("CPR", Var "a"); ("ASD", Num 12)]
 let dot = RecDot (r, "CPR")
+let v = Let (Var "H_a", dot) *)
 
-let v = Let (Var "H_a", dot)
-let program = [r; dot; v]
+// let program = [ex]
 
 let finalTenv =
     program
@@ -116,5 +119,12 @@ let finalTenv =
 
 let (TypeEnv EnvLst) = finalTenv
 
-for e in program do
-    printfn "%A" (hastype finalTenv e Low)
+let run program =
+    for e in program do
+        let inferredType = findtype finalTenv e 
+        match hastype finalTenv e inferredType with 
+        | true -> true
+        | false ->  
+            failwith  (customErrorMessage "Illegal explicit flow" e)
+        |> ignore
+printfn "%A" (run program)
