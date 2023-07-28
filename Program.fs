@@ -19,9 +19,10 @@ let readAndParseLinesFromFile (filePath: string) =
     while not fileStream.EndOfStream do
         let line = fileStream.ReadLine()
         let tokens = tokenize line
+        printfn "%A" tokens
         let exp = parse tokens
         lines.Add(exp)
-    List.ofSeq lines
+    List.ofSeq lines  // Convert lines to a list
 
 // ---------- TYPE INFERENCE ---------- //
 let rec findtype tenv exp =
@@ -39,6 +40,7 @@ let rec findtype tenv exp =
             | (High, _) | (_, High) -> High
             | (Low, Low)            -> Low
             | (Low, OK)             -> Low
+            | (OK, OK)              -> OK
     | Let (e1, e2) -> 
         let e1_type = findtype tenv e1
         let e2_type = findtype tenv e2
@@ -81,6 +83,12 @@ let rec findtype tenv exp =
             | Low   -> Low
             | OK -> OK
             | Arr (t1, t2) -> Arr (t1, t2)
+    | ParenExpr (e1) -> 
+        let e1_type = findtype tenv e1
+        match e1_type with 
+            | High -> High
+            | Low -> Low
+            | _ -> OK
             
 (* let exp = Let (Var "y", Num 10)
 let exp1 = Let (Var "a", Num 5)
@@ -111,7 +119,6 @@ let dot = RecDot (r, "CPR")
 let v = Let (Var "H_a", dot) *)
 
 // let program = [ex]
-
 let finalTenv =
     program
     |> List.fold (fun accumulatedTenv currentExp -> bindExp currentExp accumulatedTenv) tenv

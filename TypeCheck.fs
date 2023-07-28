@@ -92,3 +92,12 @@ let rec hastype tenv exp expectedType =
         let foundtype = lookup f tenv 
         match foundtype, expectedType with
             | t1, t2 -> t1 = t2
+    | ParenExpr (e1) -> 
+        match expectedType with 
+        | Low -> 
+            let t1 = hastype tenv e1 Low 
+            t1
+        | High -> 
+            let t1 = hastype tenv e1 High
+            t1
+        | _ -> false

@@ -59,3 +59,6 @@ let rec bindExp e (TypeEnv envtab) =
         List.fold bindField (TypeEnv envtab) fields // Bind each field in the list
     | RecDot (e1, f) -> 
         (TypeEnv envtab)
+    | ParenExpr (e1) -> 
+        let res1 = bindExp e1 (TypeEnv envtab)
+        res1
