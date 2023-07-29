@@ -50,7 +50,7 @@ let rec bindExp e (TypeEnv envtab) =
         let res1 = bindExp e1 (TypeEnv envtab)
         let res2 = bindExp e2 res1
         res2
-    | Record (fields) -> 
+    | Record (ID, fields) -> 
         let bindField typeEnv (fieldName, fieldValue) =
             let res1 = bindExp fieldValue typeEnv // Find the type of the field value
             let (TypeEnv envList) = res1

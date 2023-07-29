@@ -86,7 +86,7 @@ let rec hastype tenv exp expectedType =
             else false
         | _ -> false
 
-    | Record (fields) -> 
+    | Record (ID, fields) -> 
            true
     | RecDot (e1, f) -> 
         let foundtype = lookup f tenv 

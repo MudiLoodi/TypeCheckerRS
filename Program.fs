@@ -89,6 +89,7 @@ let rec findtype tenv exp =
             | High -> High
             | Low -> Low
             | _ -> OK
+    | Record (e1, e2) -> OK
             
 (* let exp = Let (Var "y", Num 10)
 let exp1 = Let (Var "a", Num 5)
@@ -106,18 +107,23 @@ let exp2 = Let (Var "b", Num 6)
 let cond = Operate (Greater, Var "H_y", Num 0)
 
 let ifexp = If (cond, exp1, exp2) *)
-let filePath = "p"
-let program = readAndParseLinesFromFile filePath
 (* let exp1 = Let (Var "H_a", Num 5)
 let exp2 = Let (Var "H_b", Num 6)
 let cond = Operate (Greater, Var "y", Num 0)
-let ifexp = If (cond, exp1, exp2)
-let f = Fun(Var "H_x", ifexp) // High -> Low *)
+let ifexp = If (cond, exp1, exp2) *)
+//let f = Fun(Var "H_x", ifexp) // High -> Low
+let filePath = "p"
 
-(* let r = Record [("CPR", Var "a"); ("ASD", Num 12)]
+(* let r = Record ("test", [("CPR", Var "a"); ("ASD", Num 12)])
 let dot = RecDot (r, "CPR")
 let v = Let (Var "H_a", dot) *)
 
+let exp = Let (Var "x", Num 2)
+
+let cond = Operate (Less, Var "H_a", Var "H_b")
+let wh = While (cond, exp)
+let program = readAndParseLinesFromFile filePath
+// let program =  [wh;cond;exp]
 // let program = [ex]
 let finalTenv =
     program
@@ -134,4 +140,5 @@ let run program =
         | false ->  
             failwith  (customErrorMessage "Illegal explicit flow" e)
         |> ignore
+
 printfn "%A" (run program)
