@@ -3,12 +3,6 @@ module Lexer
 open System.Text.RegularExpressions
 open AbSyn
 
-type Position = {
-    startLine: int
-    startColumn: int
-    endLine: int
-    endColumn: int
-}
 
 type Token =
     | NUM of int * Position

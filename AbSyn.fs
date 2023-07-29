@@ -2,11 +2,18 @@ module AbSyn
 
 type Binop = Plus | Minus | Times | Divide | Less | Greater | Equal
 
+type Position = {
+    startLine: int
+    startColumn: int
+    endLine: int
+    endColumn: int
+}
+
 type Exp = 
     | Num of int
     | Var of string
     | Operate of Binop * Exp * Exp
-    | Let of Exp * Exp
+    | Let of Exp * Exp 
     | If of Exp * Exp * Exp 
     | Fun of Exp * Exp
     | App of Exp * Exp

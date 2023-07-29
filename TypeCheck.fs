@@ -6,6 +6,7 @@ open AbSyn
 open Lexer
 
 exception MyError of string
+exception TypeError of string * Position
 
 let rec hastype tenv exp expectedType =
     match exp with 
@@ -33,11 +34,11 @@ let rec hastype tenv exp expectedType =
     | Let (e1, e2) -> 
         match expectedType with 
         | High -> 
-            let t1 = hastype tenv e1 High 
+            let t1 = hastype tenv e1 High
             if t1 then t1 else raise (MyError ("High err"))
         | Low -> 
             let t1 = hastype tenv e1 High 
-            let t2 = hastype tenv e2 Low
+            let t2 = hastype tenv e2 Low 
             let res = not t1 && t2
             //if res then res else raise (MyError ("Illegal explicit flow at " + $"%A{e1}")) 
             res

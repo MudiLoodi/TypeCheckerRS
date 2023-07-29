@@ -8,10 +8,24 @@ open AbSyn
 
 exception MyError of string
 
-let customErrorMessage (errorType: string) (expr: Exp) =
+let getBinopSymbol sym = 
+    match sym with 
+        | Plus -> "+" 
+        | Minus -> "-" 
+        | Times -> "*" 
+        | Divide -> "/" 
+        | Less -> "<" 
+        | Greater -> ">" 
+        | Equal -> "=="
+let rec customErrorMessage (expr: Exp) =
     match expr with
-    | Let (Var var1, Var var2) -> sprintf "%s in 'let %s = %s'" errorType var1 var2
-    | _ -> sprintf "%s" errorType 
+    | Let (Var var1, Var var2 ) -> sprintf "let %s = %s"  var1 var2
+    | Let (Var var1, Num (n) ) -> sprintf "let %s = %i"  var1 n
+    | If (e1, e2, e3) -> 
+        match e1 with
+        | ParenExpr (Operate (op, Var v1, Var v2)) -> 
+            sprintf "Implicit flow in 'if %s %s %s then %s else %s" v1 (getBinopSymbol op) v2 (customErrorMessage e2) (customErrorMessage e3)
+    | _ -> sprintf "placeholder" 
 
 let readAndParseLinesFromFile (filePath: string) =
     let lines = new ResizeArray<Exp>()
@@ -54,7 +68,7 @@ let rec findtype tenv exp =
         let e3_type = findtype tenv e3
         match (e1_type, e2_type, e3_type) with 
             | (High, High, High) -> High
-            | (High, Low, Low) -> raise (MyError($"Illegal Implicit Flow from then-branch: %A{e2_type}, else-branch: %A{e3_type} to clause: %A{e1_type}"))
+            | (High, Low, Low) -> Low //raise (MyError($"Illegal Implicit Flow from then-branch: %A{e2_type}, else-branch: %A{e3_type} to clause: %A{e1_type}"))
             | (Low, _, _) -> Low
     | Fun (e1, e2) ->
         let e1_type = findtype tenv e1
@@ -118,10 +132,10 @@ let filePath = "p"
 let dot = RecDot (r, "CPR")
 let v = Let (Var "H_a", dot) *)
 
-let exp = Let (Var "x", Num 2)
+//let exp = Let (Var "x", Num 2)
 
 let cond = Operate (Less, Var "H_a", Var "H_b")
-let wh = While (cond, exp)
+//let wh = While (cond, exp)
 let program = readAndParseLinesFromFile filePath
 // let program =  [wh;cond;exp]
 // let program = [ex]
@@ -132,13 +146,16 @@ let finalTenv =
 
 let (TypeEnv EnvLst) = finalTenv
 
+
+
 let run program =
     for e in program do
         let inferredType = findtype finalTenv e 
-        match hastype finalTenv e inferredType with 
-        | true -> true
-        | false ->  
-            failwith  (customErrorMessage "Illegal explicit flow" e)
+        let typeCheckResult = hastype finalTenv e inferredType
+        match typeCheckResult, e with 
+        | true, e -> true
+        | false, Let (Var n, Var a)  ->  failwith  (customErrorMessage  e)
+        | false, If (e1, e2, e3) -> failwith  (customErrorMessage e)
         |> ignore
 
 printfn "%A" (run program)
