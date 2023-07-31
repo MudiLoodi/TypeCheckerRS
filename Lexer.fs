@@ -31,7 +31,7 @@ let tokenize (input: string) =
     let regexNum = Regex(@"[0-9]+")
     let regexBinOp = Regex(@"[+\-*/<>=]")
     let regexParen = Regex(@"[(|)]")
-    let regexBraces = Regex(@"[{|}]")  // New regex for braces
+    let regexBraces = Regex(@"[{|}]")
     let regexDot = Regex(@"\.")
 
     let rec tokenizeHelper (input: string list) (acc: Token list) (line: int) (column: int) =        
@@ -146,23 +146,22 @@ let parse (tokens: Token list) =
             (RecDot (Var v, f), rest)
         | VAR (v, _) :: rest ->
             (Var v, rest)
-        | OPERATE (op, _) :: rest when rest |> List.head |> isExprToken ->
-            let (expr1, rest) = parseExpr rest
-            let (expr2, rest) = parseExpr rest
-            (Operate (op, expr1, expr2), rest)
         | LPAREN pos :: rest ->  // New case for left parenthesis
             let (expr, rest) = parseBinOp rest  // Call to parseBinOp
             match rest with
             | RPAREN _ :: rest -> (ParenExpr expr, rest)
             | _ -> failwith "Expected right parenthesis"
-
         | _ -> failwith "Unexpected token when parsing expression"
 
     and parseBinOp tokens =
         match tokens with
-        | VAR (v, _) :: OPERATE (op, _) :: rest when rest |> List.head |> isExprToken ->
-            let (expr, rest) = parseExpr rest
-            (Operate (op, Var v, expr), rest)
+        | rest when rest |> List.head |> isExprToken ->
+            let (expr1, rest) = parseExpr rest
+            match rest with
+            | OPERATE (op, _) :: rest ->
+                let (expr2, rest) = parseExpr rest
+                (Operate (op, expr1, expr2), rest)
+            | _ -> failwith "Expected operator when parsing binary operation"
         | _ -> failwith "Unexpected token when parsing binary operation"
 
     let rec parseRecordField tokens =
