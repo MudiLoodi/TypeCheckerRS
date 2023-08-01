@@ -93,20 +93,33 @@ let rec findtype tenv exp =
             | High -> High
             | Low -> Low
             | _ -> OK
-    | Record (e1, e2) -> OK
+    | Record (e1) -> OK
             
+(* let bod = Let (Var "x", Num 5)
+let e = Fun (Var "a", bod)
 
-
-
+let v = Let (Var "g", e) *)
+let r = Record (["CPR", Var "H_a"])
+let dot = RecDot (r, "CPR")
 
 let filePath = "tests/tests"
 let program = readAndParseLinesFromFile filePath
+// let program = [r;dot]
 let finalTenv =
     program
     |> List.fold (fun accumulatedTenv currentExp -> bindExp currentExp accumulatedTenv) tenv
     |> (fun (TypeEnv ttab) -> TypeEnv (List.rev ttab))
 
 let (TypeEnv EnvLst) = finalTenv
+
+(* let run program =
+    for e in program do
+        let inferredType = findtype finalTenv e 
+        let typeCheckResult = hastype finalTenv e inferredType
+        printfn "%A %A" e inferredType
+        match typeCheckResult with 
+        | true  -> printfn "PASS"
+        | _ -> printfn "FAIL" *)
 
 
 let run program =
@@ -119,5 +132,5 @@ let run program =
         | true  -> writer.WriteLine("pass")
         | _ -> writer.WriteLine("FAIL")
     writer.Close()
-
+printfn "%A" finalTenv
 run program

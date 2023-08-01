@@ -201,7 +201,7 @@ let parse (tokens: Token list) =
             | _ -> failwith "Expected DO token after WHILE condition"
         | RECORD pos :: VAR (v, _) :: EQUAL _ :: rest -> 
             let (fields, rest) = parseRecordField rest
-            (Record (v, fields), rest)
+            (Record (fields), rest)
         | _ -> failwith "Unexpected token when parsing statement"
 
     fst (parseStmt tokens)

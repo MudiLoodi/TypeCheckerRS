@@ -11,7 +11,7 @@ let rec lookup (n: string) (tenv: TypeEnv<'a>) =
     | TypeEnv ttab ->
         match List.tryFind (fun (name, _) -> name = n) ttab with
         | Some (_, boundType) -> boundType
-        | None -> failwith "Variable not found in the type environment"
+        | None -> failwith $"Variable '{n}' not found in the type environment"
 
 // Binds a variable to a type 
 let bind id btype (TypeEnv ttab) = TypeEnv ((id,btype)::ttab)
@@ -50,7 +50,7 @@ let rec bindExp e (TypeEnv envtab) =
         let res1 = bindExp e1 (TypeEnv envtab)
         let res2 = bindExp e2 res1
         res2
-    | Record (ID, fields) -> 
+    | Record (fields) -> 
         let bindField typeEnv (fieldName, fieldValue) =
             let res1 = bindExp fieldValue typeEnv // Find the type of the field value
             let (TypeEnv envList) = res1
