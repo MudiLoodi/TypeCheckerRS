@@ -32,16 +32,13 @@ let rec findtype tenv exp =
     | Num n -> OK
     | Var(e1) -> 
         let res = lookup e1 tenv
-        match res with
-            | High  -> High
-            | Low   -> Low
+        res
     | Operate (op, e1, e2) ->
         let e1_type = findtype tenv e1
         let e2_type = findtype tenv e2
         match (e1_type, e2_type) with
             | (High, _) | (_, High) -> High
-            | (Low, Low)            -> Low
-            | (Low, OK)             -> Low
+            | (Low, _)              -> Low
             | (OK, OK)              -> OK
     | Let (e1, e2) -> 
         let e1_type = findtype tenv e1
@@ -55,19 +52,16 @@ let rec findtype tenv exp =
         let e2_type = findtype tenv e2
         let e3_type = findtype tenv e3
         match (e1_type, e2_type, e3_type) with 
-            | (High, High, High) -> High
-            | (High, Low, Low) -> High 
-            | (High, High, Low) -> High
-            | (High, Low, High) -> High
+            | (High, _, _) -> High
             | (Low, _, _) -> Low
     | Fun (e1, e2) ->
         let e1_type = findtype tenv e1
         let e2_type = findtype tenv e2
         match (e1_type, e2_type) with 
             | (High, High)    -> Arr (High, High)
-            | (High, OK)    -> Arr (High, OK)
+            | (High, OK)      -> Arr (High, OK)
             | (Low, t)  -> Arr (Low, t)
-            | (High, Low)   -> Arr (High, Low)
+            | (High, Low)     -> Arr (High, Low)
     | App (e1, e2) ->
         let e1_type = findtype tenv e1
         let e2_type = findtype tenv e2
@@ -82,11 +76,7 @@ let rec findtype tenv exp =
         | _ -> OK
     | RecDot (e1, f) -> 
         let res = lookup f tenv
-        match res with
-            | High  -> High
-            | Low   -> Low
-            | OK -> OK
-            | Arr (t1, t2) -> Arr (t1, t2)
+        res
     | ParenExpr (e1) -> 
         let e1_type = findtype tenv e1
         match e1_type with 
@@ -103,8 +93,19 @@ let r = Record (["CPR", Var "H_a"])
 let dot = RecDot (r, "CPR")
 
 let filePath = "tests/tests"
-let program = readAndParseLinesFromFile filePath
-// let program = [r;dot]
+// let program = readAndParseLinesFromFile filePath
+
+
+let exp = Let (Var "y", Num 10)
+let exp1 = Let (Var "a", Num 5)
+let exp2 = Let (Var "b", Num 6)
+let cond = Operate (Greater, Var "t", Var "o")
+let ifexp = If (cond, exp1, exp2)
+let f = Fun(Var "x", ifexp)
+
+let d = Let (Var "w", Operate (Plus, f, Num 3))
+let program = [f]
+
 let finalTenv =
     program
     |> List.fold (fun accumulatedTenv currentExp -> bindExp currentExp accumulatedTenv) tenv
@@ -112,17 +113,17 @@ let finalTenv =
 
 let (TypeEnv EnvLst) = finalTenv
 
-(* let run program =
+let run program =
     for e in program do
         let inferredType = findtype finalTenv e 
         let typeCheckResult = hastype finalTenv e inferredType
         printfn "%A %A" e inferredType
         match typeCheckResult with 
         | true  -> printfn "PASS"
-        | _ -> printfn "FAIL" *)
+        | _ -> printfn "FAIL"
 
 
-let run program =
+(* let run program =
     let filePath = "tests/testResult"
     let writer = File.CreateText(filePath)
     for e in program do
@@ -131,6 +132,5 @@ let run program =
         match typeCheckResult with 
         | true  -> writer.WriteLine("pass")
         | _ -> writer.WriteLine("FAIL")
-    writer.Close()
-printfn "%A" finalTenv
+    writer.Close() *)
 run program

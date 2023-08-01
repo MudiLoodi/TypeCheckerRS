@@ -28,23 +28,23 @@ let rec expressionToString exp =
     | Fun (e1, e2) -> sprintf "\\lambda(%s) = {%s}" (expressionToString e1) (expressionToString e2) 
     | App (e1, e2) -> sprintf "%s %s"(expressionToString e1) (expressionToString e2) 
     | RecDot (e1, str) -> sprintf "%s.%s" (expressionToString e1) str
-let rec hastype tenv exp expectedType =
+let rec hastype tenv exp inferredType =
     match exp with 
     | Num n -> 
-        match expectedType with
+        match inferredType with
         | Low -> true
         | _ -> false
     | Var(e1) -> 
         let foundtype = lookup e1 tenv 
-        match foundtype, expectedType with
+        match foundtype, inferredType with
             | t1, t2 -> t1 = t2
 
     | Operate (op, e1, e2) -> 
-        match expectedType with
+        match inferredType with
         | High -> 
             let t1 = hastype tenv e1 High 
             let t2 = hastype tenv e2 High 
-            t1 || t2
+            t1 || t2 // If either expression has type high then it is correct
         | Low -> 
             let t1 = hastype tenv e1 Low 
             let t2 = hastype tenv e2 Low
@@ -53,7 +53,7 @@ let rec hastype tenv exp expectedType =
 
     | Let (e1, e2) -> 
         let exp = Let (e1, e2)
-        match expectedType with 
+        match inferredType with 
         | High -> 
             let t1 = hastype tenv e1 High
             t1
@@ -81,7 +81,7 @@ let rec hastype tenv exp expectedType =
 
     | If (e1, e2, e3) ->
         let exp = If (e1, e2, e3)
-        match expectedType with 
+        match inferredType with 
         | High -> 
             try 
                 let t1 = hastype tenv e1 High 
@@ -100,7 +100,7 @@ let rec hastype tenv exp expectedType =
 
     | App (e1, e2) ->
         let exp = App (e1, e2)
-        match expectedType with 
+        match inferredType with 
         | High -> // if t2 is high, then e1 can either be high -> high or low -> high
             let highToHigh = hastype tenv e1 (Arr (High, High)) 
             let lowToHigh =  hastype tenv e1 (Arr (Low, High))
@@ -123,23 +123,28 @@ let rec hastype tenv exp expectedType =
 
     | Fun (e1, e2) ->
         let exp = Fun (e1, e2)
-        match expectedType with 
+        match inferredType with 
         | Arr (expt1, expt2) -> 
-            let t1 = hastype tenv e1 High // check if e1 is high
-            let expectedType1 = hastype tenv e1 expt1 // check the expected type
-            if t1 && expectedType1 then // if e1 and expected type for e1 are High
-                let t2 = hastype tenv e2 High 
-                let expectedType2 = hastype tenv e2 expt2 
-                let res = t2 && expectedType2
-                if res then res else raise (TypeError ("Illegal implicit flow in function " + $"'{expressionToString exp}'"))
-            else
-                let t1 = hastype tenv e1 Low // check if e1 is low
+            try 
+                let t1 = hastype tenv e1 High // check if e1 is high
                 let expectedType1 = hastype tenv e1 expt1 // check the expected type
-                t1 && expectedType1  // if e1 is low, then we are done, since types low -> high and low -> low are accepted.
+                if t1 && expectedType1 then // if e1 and expected type for e1 are High
+                    let t2 = hastype tenv e2 Low // Check if e2 is low.
+                    let expectedType2 = hastype tenv e2 expt2 
+                    let res = not t2 && expectedType2
+                    if res then res else raise (TypeError ("Illegal implicit flow in function " + $"'{expressionToString exp}'"))
+                else
+                    let t1 = hastype tenv e1 Low // check if e1 is low
+                    let expectedType1 = hastype tenv e1 expt1 // check the expected type
+                    t1 && expectedType1  // if e1 is low, then we are done, since types low -> high and low -> low are accepted.
+            with
+            | :? TypeError as ex -> 
+                printfn "%s" ex.Message
+                false
         | _ -> false
 
     | While (e1, e2) -> 
-        match expectedType with 
+        match inferredType with 
         | OK -> 
             try 
                 let t1 = hastype tenv e1 Low 
@@ -159,10 +164,10 @@ let rec hastype tenv exp expectedType =
            true
     | RecDot (e1, f) -> 
         let foundtype = lookup f tenv 
-        match foundtype, expectedType with
+        match foundtype, inferredType with
             | t1, t2 -> t1 = t2
     | ParenExpr (e1) -> 
-        match expectedType with 
+        match inferredType with 
         | Low -> 
             let t1 = hastype tenv e1 Low 
             t1

@@ -30,8 +30,8 @@ let rec bindExp e (TypeEnv envtab) =
         let res2 = bindExp e2 res1
         res2
     | Let (e1, e2) -> 
-        let res1 = bindExp e1 (TypeEnv envtab)
-        let res2 = bindExp e2 res1
+        let res1 = bindExp e1 (TypeEnv envtab) // Bind e1 to the environment
+        let res2 = bindExp e2 res1  // Bind e2 to the updated type env res1
         res2
     | If (e1, e2, e3) ->
         let res1 = bindExp e1 (TypeEnv envtab)
@@ -51,11 +51,11 @@ let rec bindExp e (TypeEnv envtab) =
         let res2 = bindExp e2 res1
         res2
     | Record (fields) -> 
-        let bindField typeEnv (fieldName, fieldValue) =
-            let res1 = bindExp fieldValue typeEnv // Find the type of the field value
+        let bindField typeEnv (fieldName, fieldExp) =
+            let res1 = bindExp fieldExp typeEnv // Find the type of the field exp
             let (TypeEnv envList) = res1
             let fieldType = snd (List.head envList)
-            bind fieldName fieldType typeEnv // Bind the field to the type of the field value in the type env
+            bind fieldName fieldType typeEnv // Bind the field to the type of the field exp in the type env
         List.fold bindField (TypeEnv envtab) fields // Bind each field in the list
     | RecDot (e1, f) -> 
         (TypeEnv envtab)
