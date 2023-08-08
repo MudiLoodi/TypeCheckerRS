@@ -27,4 +27,4 @@ type Type =
     | High
     | OK
     | Arr of Type * Type // t1 -> t2
-    | Rec of Exp * Type // fields are Exp (Var)
+    | Rec of (string * Type) list // fields are Exp (Var)

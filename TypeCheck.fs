@@ -4,6 +4,7 @@ open System.IO
 open TypeEnv
 open AbSyn
 open Lexer
+open TypeInference
 
 exception TypeError of string 
 
@@ -33,6 +34,7 @@ let rec hastype tenv exp inferredType =
     | Num n -> 
         match inferredType with
         | Low -> true
+        | OK -> true
         | _ -> false
     | Var(e1) -> 
         let foundtype = lookup e1 tenv 
@@ -161,11 +163,22 @@ let rec hastype tenv exp inferredType =
         | _ -> false
 
     | Record (fields) -> 
-           true
+        match inferredType with
+        | Rec (expectedFields) -> 
+            List.forall2 (fun (name, exp) (expectedName, expectedType) -> 
+                name = expectedName && (hastype tenv exp expectedType)) fields expectedFields
+        | _ -> false
     | RecDot (e1, f) -> 
-        let foundtype = lookup f tenv 
-        match foundtype, inferredType with
-            | t1, t2 -> t1 = t2
+        match findtype tenv e1 with
+        | Rec recTypes ->
+            match List.tryFind (fun (name, _) -> name = f) recTypes with
+            | Some (_, fieldType) ->
+                match inferredType with
+                | High -> fieldType = High && hastype tenv e1 (Rec recTypes)
+                | Low -> fieldType = Low && hastype tenv e1 (Rec recTypes)
+                | _ -> false
+            | None -> false
+        | _ -> false
     | ParenExpr (e1) -> 
         match inferredType with 
         | Low -> 

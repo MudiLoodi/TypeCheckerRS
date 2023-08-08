@@ -5,7 +5,7 @@ open TypeEnv
 open Lexer
 open TypeCheck
 open AbSyn
-
+open TypeInference
 (* let rec customErrorMessage (expr: Exp) =
     match expr with
     | Let (Var var1, Var var2 ) -> sprintf "let %s = %s"  var1 var2
@@ -27,72 +27,17 @@ let readAndParseLinesFromFile (filePath: string) =
     List.ofSeq lines  // Convert lines to a list
 
 // ---------- TYPE INFERENCE ---------- //
-let rec findtype tenv exp =
-    match exp with
-    | Num n -> OK
-    | Var(e1) -> 
-        let res = lookup e1 tenv
-        res
-    | Operate (op, e1, e2) ->
-        let e1_type = findtype tenv e1
-        let e2_type = findtype tenv e2
-        match (e1_type, e2_type) with
-            | (High, _) | (_, High) -> High
-            | (Low, _)              -> Low
-            | (OK, OK)              -> OK
-    | Let (e1, e2) -> 
-        let e1_type = findtype tenv e1
-        let e2_type = findtype tenv e2
-        match(e1_type, e2_type) with 
-            | (High, _) -> High
-            | (Low, _) ->  Low
-            | _ -> OK
-    | If (e1, e2, e3) ->
-        let e1_type = findtype tenv e1
-        let e2_type = findtype tenv e2
-        let e3_type = findtype tenv e3
-        match (e1_type, e2_type, e3_type) with 
-            | (High, _, _) -> High
-            | (Low, _, _) -> Low
-    | Fun (e1, e2) ->
-        let e1_type = findtype tenv e1
-        let e2_type = findtype tenv e2
-        match (e1_type, e2_type) with 
-            | (High, High)    -> Arr (High, High)
-            | (High, OK)      -> Arr (High, OK)
-            | (Low, t)  -> Arr (Low, t)
-            | (High, Low)     -> Arr (High, Low)
-    | App (e1, e2) ->
-        let e1_type = findtype tenv e1
-        let e2_type = findtype tenv e2
-        match (e1_type, e2_type) with 
-            | (Arr(t1, t2), t1') -> if t1 = t1' then t2 else t1
-    | While (e1, e2) -> 
-        let e1_type = findtype tenv e1
-        let e2_type = findtype tenv e2
-        match (e1_type, e2_type) with 
-        | (High, High) -> OK
-        | (Low, _) -> OK
-        | _ -> OK
-    | RecDot (e1, f) -> 
-        let res = lookup f tenv
-        res
-    | ParenExpr (e1) -> 
-        let e1_type = findtype tenv e1
-        match e1_type with 
-            | High -> High
-            | Low -> Low
-            | _ -> OK
-    | Record (e1) -> Low
+
             
 (* let bod = Let (Var "x", Num 5)
 let e = Fun (Var "a", bod)
 
 let v = Let (Var "g", e) *)
-let r = Record (["CPR", Var "H_a"])
+let v = Var "H_a"
+let r = Record (["CPR", v; "Age", Num 12])
 let dot = RecDot (r, "CPR")
 
-let filePath = "tests/tests"
+// let filePath = "tests/tests"
 // let program = readAndParseLinesFromFile filePath
 
 
@@ -104,7 +49,7 @@ let ifexp = If (cond, exp1, exp2)
 let f = Fun(Var "x", ifexp)
 
 let d = Let (Var "w", Operate (Plus, f, Num 3))
-let program = [f]
+let program = [v;r;dot]
 
 let finalTenv =
     program
@@ -117,11 +62,10 @@ let run program =
     for e in program do
         let inferredType = findtype finalTenv e 
         let typeCheckResult = hastype finalTenv e inferredType
-        printfn "%A %A" e inferredType
+        //printfn "%A: %A" e inferredType
         match typeCheckResult with 
         | true  -> printfn "PASS"
         | _ -> printfn "FAIL"
-
 
 (* let run program =
     let filePath = "tests/testResult"
