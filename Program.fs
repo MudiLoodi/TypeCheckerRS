@@ -83,7 +83,7 @@ let rec findtype tenv exp =
             | High -> High
             | Low -> Low
             | _ -> OK
-    | Record (e1) -> OK
+    | Record (e1) -> Low
             
 (* let bod = Let (Var "x", Num 5)
 let e = Fun (Var "a", bod)
