@@ -51,7 +51,7 @@ let rec findtype tenv exp =
         | (High, High) -> OK
         | (Low, _) -> OK
         | _ -> OK
-    | Record (fields) -> 
+    | Record (id, fields) -> 
         let recTypes = fields |> List.map (fun (name, expr) -> name, findtype tenv expr)
         Rec recTypes
     | RecDot (e1, f) -> 

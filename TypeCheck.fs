@@ -48,8 +48,12 @@ let rec hastype tenv exp inferredType =
             let t2 = hastype tenv e2 High 
             t1 || t2 // If either expression has type high then it is correct
         | Low -> 
-            let t1 = hastype tenv e1 Low 
+            let t1 = hastype tenv e1 Low
             let t2 = hastype tenv e2 Low
+            t1 && t2
+        | OK -> 
+            let t1 = hastype tenv e1 OK
+            let t2 = hastype tenv e2 OK
             t1 && t2
         | _ -> false
 
@@ -162,7 +166,7 @@ let rec hastype tenv exp inferredType =
                 false
         | _ -> false
 
-    | Record (fields) -> 
+    | Record (id, fields) -> 
         match inferredType with
         | Rec (expectedFields) -> 
             List.forall2 (fun (name, exp) (expectedName, expectedType) -> 
@@ -176,15 +180,12 @@ let rec hastype tenv exp inferredType =
                 match inferredType with
                 | High -> fieldType = High && hastype tenv e1 (Rec recTypes)
                 | Low -> fieldType = Low && hastype tenv e1 (Rec recTypes)
+                | OK -> fieldType = OK && hastype tenv e1 (Rec recTypes)
                 | _ -> false
             | None -> false
         | _ -> false
     | ParenExpr (e1) -> 
         match inferredType with 
-        | Low -> 
-            let t1 = hastype tenv e1 Low 
+        | t -> 
+            let t1 = hastype tenv e1 t 
             t1
-        | High -> 
-            let t1 = hastype tenv e1 High
-            t1
-        | _ -> false

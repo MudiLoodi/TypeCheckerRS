@@ -6,15 +6,6 @@ open Lexer
 open TypeCheck
 open AbSyn
 open TypeInference
-(* let rec customErrorMessage (expr: Exp) =
-    match expr with
-    | Let (Var var1, Var var2 ) -> sprintf "let %s = %s"  var1 var2
-    | Let (Var var1, Num (n) ) -> sprintf "let %s = %i"  var1 n
-    | If (e1, e2, e3) -> 
-        match e1 with
-        | ParenExpr (Operate (op, Var v1, Var v2)) -> 
-            sprintf "Implicit flow in 'if %s %s %s then %s else %s" v1 (getBinopSymbol op) v2 (customErrorMessage e2) (customErrorMessage e3)
-    | _ -> sprintf "placeholder"  *)
 
 let readAndParseLinesFromFile (filePath: string) =
     let lines = new ResizeArray<Exp>()
@@ -26,17 +17,16 @@ let readAndParseLinesFromFile (filePath: string) =
         lines.Add(exp)
     List.ofSeq lines  // Convert lines to a list
 
-// ---------- TYPE INFERENCE ---------- //
-
             
 (* let bod = Let (Var "x", Num 5)
 let e = Fun (Var "a", bod)
 
 let v = Let (Var "g", e) *)
 let v = Var "H_a"
-let r = Record (["CPR", v; "Age", Num 12])
-let dot = RecDot (r, "CPR")
-
+let r = Record ("person", ["CPR", v; "Age", Num 12])
+let dot = RecDot (r, "Age")
+let op = Operate (Plus, dot, dot)
+let p = Let (Var "s", op)
 // let filePath = "tests/tests"
 // let program = readAndParseLinesFromFile filePath
 
@@ -49,7 +39,7 @@ let ifexp = If (cond, exp1, exp2)
 let f = Fun(Var "x", ifexp)
 
 let d = Let (Var "w", Operate (Plus, f, Num 3))
-let program = [v;r;dot]
+let program = [v;r;dot;p]
 
 let finalTenv =
     program
@@ -58,23 +48,24 @@ let finalTenv =
 
 let (TypeEnv EnvLst) = finalTenv
 
+printfn "%A" finalTenv
 let run program =
     for e in program do
         let inferredType = findtype finalTenv e 
         let typeCheckResult = hastype finalTenv e inferredType
-        //printfn "%A: %A" e inferredType
+        // printfn "%A: %A" e inferredType
         match typeCheckResult with 
         | true  -> printfn "PASS"
         | _ -> printfn "FAIL"
-
 (* let run program =
     let filePath = "tests/testResult"
     let writer = File.CreateText(filePath)
     for e in program do
         let inferredType = findtype finalTenv e 
+        // printfn "%A: %A" e inferredType
         let typeCheckResult = hastype finalTenv e inferredType
         match typeCheckResult with 
-        | true  -> writer.WriteLine("pass")
+        | true  -> writer.WriteLine("PASS")
         | _ -> writer.WriteLine("FAIL")
     writer.Close() *)
 run program

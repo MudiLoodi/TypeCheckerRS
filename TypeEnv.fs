@@ -1,7 +1,6 @@
 module TypeEnv
 
 open AbSyn
-
 type TypeEnv<'a> = TypeEnv of (string * 'a) list
 
 let tenv = TypeEnv []
@@ -50,13 +49,19 @@ let rec bindExp e (TypeEnv envtab) =
         let res1 = bindExp e1 (TypeEnv envtab)
         let res2 = bindExp e2 res1
         res2
-    | Record (fields) -> 
-        let bindField typeEnv (fieldName, fieldExp) =
-            let res1 = bindExp fieldExp typeEnv // Find the type of the field exp
+    | Record (id, fields) -> 
+        // Create a list of field types
+        let fieldTypes = fields |> List.map (fun (fieldName, fieldExp) ->
+            // Find the type of the current field expression.
+            let res1 = bindExp fieldExp (TypeEnv envtab)
+            // Extract the type environment list from the result
             let (TypeEnv envList) = res1
+            // Get the type of the current field 
             let fieldType = snd (List.head envList)
-            bind fieldName fieldType typeEnv // Bind the field to the type of the field exp in the type env
-        List.fold bindField (TypeEnv envtab) fields // Bind each field in the list
+            // Return a tuple of the field name and its inferred type.
+            (fieldName, fieldType))
+        // Bind the record id to the Rec type, which includes all the field types, and return the updated type environment.
+        bind id (Rec fieldTypes) (TypeEnv envtab)
     | RecDot (e1, f) -> 
         (TypeEnv envtab)
     | ParenExpr (e1) -> 

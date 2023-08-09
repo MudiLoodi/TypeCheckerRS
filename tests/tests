@@ -14,11 +14,13 @@ if (a < b) then let x = 5 else let H_x = 10
 if (H_a == b) then let x = 5 else let x = 10
 if (H_a < b) then let H_x = 5 else let x = 10
 if (H_a > b) then let H_x = 5 else let H_x = 10
+let Dingo = a
+let H_CPR = 1234
 record person = name: "Dingo", CPR: H_CPR, age: 24, height: 3
 let info = person.CPR
 let H_secretInfo = person.CPR
 let nameInfo = person.name
-let s = person.age + person.height
+let s = (person.age + person.height)
 let mess = (person.age + person.CPR)
 let H_mess = (2 * person.CPR)
 while (a < b) do let H_d = H_d * 2

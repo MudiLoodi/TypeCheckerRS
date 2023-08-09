@@ -18,7 +18,7 @@ type Exp =
     | Fun of Exp * Exp
     | App of Exp * Exp
     | While of Exp * Exp
-    | Record of (string * Exp) list // Nested record type to hold mulitple fields
+    | Record of string * (string * Exp) list // Nested record type to hold mulitple fields
     | RecDot of Exp * string
     | ParenExpr of Exp
 
