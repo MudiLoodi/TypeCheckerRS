@@ -29,6 +29,7 @@ let rec expressionToString exp =
     | Fun (e1, e2) -> sprintf "\\lambda(%s) = {%s}" (expressionToString e1) (expressionToString e2) 
     | App (e1, e2) -> sprintf "%s %s"(expressionToString e1) (expressionToString e2) 
     | RecDot (e1, str) -> sprintf "%s.%s" (expressionToString e1) str
+    | Record (id, fields) -> sprintf "%s" id
 let rec hastype tenv exp inferredType =
     match exp with 
     | Num n -> 
@@ -74,16 +75,6 @@ let rec hastype tenv exp inferredType =
                     printfn "%s" ex.Message 
                     false
         | _ -> false
-(*         | OK -> 
-            let t1 = hastype tenv e1 High
-            if t1 then true
-            elif not t1 then
-                let t2 = hastype tenv e2 Low
-                let res = not t1 && t2
-                if res then res else raise (TypeError ("Illegal explicit flow at " + $"'{expressionToString exp}'"))
-            else
-                false
-        | _ -> false *)
 
     | If (e1, e2, e3) ->
         let exp = If (e1, e2, e3)
@@ -105,7 +96,6 @@ let rec hastype tenv exp inferredType =
         | _ -> false
 
     | App (e1, e2) ->
-        let exp = App (e1, e2)
         match inferredType with 
         | High -> // if t2 is high, then e1 can either be high -> high or low -> high
             let highToHigh = hastype tenv e1 (Arr (High, High)) 
@@ -122,8 +112,8 @@ let rec hastype tenv exp inferredType =
                 raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
         | Low -> 
             let t1 = hastype tenv e1 (Arr (Low, Low)) || hastype tenv e1 (Arr (High, Low))
-            let t2 = hastype tenv e2 Low
-            let res = t1 && t2
+            let t2 = hastype tenv e2 High
+            let res = t1 && not t2
             if res then res else raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
         | _ -> false
 
