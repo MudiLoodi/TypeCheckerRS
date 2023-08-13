@@ -1,9 +1,7 @@
 module TypeCheck
-open System
-open System.IO
 open TypeEnv
 open AbSyn
-open Lexer
+open TypeInference
 
 exception TypeError of string 
 
@@ -28,11 +26,13 @@ let rec expressionToString exp =
     | Fun (e1, e2) -> sprintf "\\lambda(%s) = {%s}" (expressionToString e1) (expressionToString e2) 
     | App (e1, e2) -> sprintf "%s %s"(expressionToString e1) (expressionToString e2) 
     | RecDot (e1, str) -> sprintf "%s.%s" (expressionToString e1) str
+    | Record (id, fields) -> sprintf "%s" id
 let rec hastype tenv exp inferredType =
     match exp with 
     | Num n -> 
         match inferredType with
         | Low -> true
+        | OK -> true
         | _ -> false
     | Var(e1) -> 
         let foundtype = lookup e1 tenv 
@@ -46,8 +46,12 @@ let rec hastype tenv exp inferredType =
             let t2 = hastype tenv e2 High 
             t1 || t2 // If either expression has type high then it is correct
         | Low -> 
-            let t1 = hastype tenv e1 Low 
+            let t1 = hastype tenv e1 Low
             let t2 = hastype tenv e2 Low
+            t1 && t2
+        | OK -> 
+            let t1 = hastype tenv e1 OK
+            let t2 = hastype tenv e2 OK
             t1 && t2
         | _ -> false
 
@@ -68,16 +72,6 @@ let rec hastype tenv exp inferredType =
                     printfn "%s" ex.Message 
                     false
         | _ -> false
-(*         | OK -> 
-            let t1 = hastype tenv e1 High
-            if t1 then true
-            elif not t1 then
-                let t2 = hastype tenv e2 Low
-                let res = not t1 && t2
-                if res then res else raise (TypeError ("Illegal explicit flow at " + $"'{expressionToString exp}'"))
-            else
-                false
-        | _ -> false *)
 
     | If (e1, e2, e3) ->
         let exp = If (e1, e2, e3)
@@ -99,26 +93,35 @@ let rec hastype tenv exp inferredType =
         | _ -> false
 
     | App (e1, e2) ->
-        let exp = App (e1, e2)
         match inferredType with 
         | High -> // if t2 is high, then e1 can either be high -> high or low -> high
-            let highToHigh = hastype tenv e1 (Arr (High, High)) 
-            let lowToHigh =  hastype tenv e1 (Arr (Low, High))
-            if highToHigh then 
-                let t2 = hastype tenv e2 High
-                let res = highToHigh && t2
-                if res then res else raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
-            elif lowToHigh then
-                let t2 = hastype tenv e2 Low
-                let res = lowToHigh && t2
-                res
-            else
-                raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
+            try
+                let highToHigh = hastype tenv e1 (Arr (High, High)) 
+                let lowToHigh =  hastype tenv e1 (Arr (Low, High))
+                if highToHigh then 
+                    let t2 = hastype tenv e2 High
+                    let res = highToHigh && t2
+                    if res then res else raise (TypeError ($"Illegal types: Fun (High -> High) applied to arg (Low)"))
+                elif lowToHigh then
+                    let t2 = hastype tenv e2 Low
+                    let res = lowToHigh && t2
+                    res
+                else
+                    raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
+            with
+            | :? TypeError as ex -> 
+                printfn "%s" ex.Message
+                false
         | Low -> 
-            let t1 = hastype tenv e1 (Arr (Low, Low)) || hastype tenv e1 (Arr (High, Low))
-            let t2 = hastype tenv e2 Low
-            let res = t1 && t2
-            if res then res else raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
+            try
+                let t1 = hastype tenv e1 (Arr (Low, Low)) || hastype tenv e1 (Arr (High, Low))
+                let t2 = hastype tenv e2 High
+                let res = t1 && not t2
+                if res then res else raise (TypeError ("Illegal implicit flow in function " + $"'{expressionToString e1}' when applied to '{expressionToString e2}'"))
+            with
+            | :? TypeError as ex -> 
+                printfn "%s" ex.Message
+                false
         | _ -> false
 
     | Fun (e1, e2) ->
@@ -160,18 +163,26 @@ let rec hastype tenv exp inferredType =
                 false
         | _ -> false
 
-    | Record (fields) -> 
-           true
+    | Record (id, fields) -> 
+        match inferredType with
+        | Rec (expectedFields) -> 
+            List.forall2 (fun (name, exp) (expectedName, expectedType) -> 
+                name = expectedName && (hastype tenv exp expectedType)) fields expectedFields
+        | _ -> false
     | RecDot (e1, f) -> 
-        let foundtype = lookup f tenv 
-        match foundtype, inferredType with
-            | t1, t2 -> t1 = t2
+        match findtype tenv e1 with
+        | Rec recTypes ->
+            match List.tryFind (fun (name, _) -> name = f) recTypes with
+            | Some (_, fieldType) ->
+                match inferredType with
+                | High -> fieldType = High && hastype tenv e1 (Rec recTypes)
+                | Low -> fieldType = Low && hastype tenv e1 (Rec recTypes)
+                | OK -> fieldType = OK && hastype tenv e1 (Rec recTypes)
+                | _ -> false
+            | None -> false
+        | _ -> false
     | ParenExpr (e1) -> 
         match inferredType with 
-        | Low -> 
-            let t1 = hastype tenv e1 Low 
+        | t -> 
+            let t1 = hastype tenv e1 t 
             t1
-        | High -> 
-            let t1 = hastype tenv e1 High
-            t1
-        | _ -> false
