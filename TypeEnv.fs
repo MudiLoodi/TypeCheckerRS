@@ -1,11 +1,11 @@
 module TypeEnv
 
 open AbSyn
-type TypeEnv<'a> = TypeEnv of (string * 'a) list
+type TypeEnv<'Type> = TypeEnv of (string * 'Type) list
 
 let tenv = TypeEnv []
 
-let rec lookup (n: string) (tenv: TypeEnv<'a>) =
+let rec lookup (n: string) (tenv: TypeEnv<'Type>) =
     match tenv with
     | TypeEnv ttab ->
         match List.tryFind (fun (name, _) -> name = n) ttab with

@@ -38,7 +38,7 @@ let ifexp = If (cond, exp1, exp2)
 let f = Fun(Var "H_x", ifexp)
 
 let d = Let (Var "w", Operate (Plus, f, Num 3)) *)
-let secret = Let (Var "H_secret", Num 1998)
+(* let secret = Let (Var "H_secret", Num 1998)
 let name = Var "Bob"
 let rcrd = Record ("student", ["name", name; "BirthYear", secret; "ECTS", Num 125])
 let dot = RecDot (rcrd, "BirthYear")
@@ -46,8 +46,13 @@ let op = Operate(Minus, Num 2023, dot)
 let body = Let (Var "age", op)
 let f = Fun(rcrd, body)
 let ap = App (f, rcrd)
-let program = [secret;name;rcrd;dot;op;body;f;ap]
+let program = [secret;name;rcrd;dot;op;body;f;ap] *)
+let body = Let (Var "H_x", Var "H_arg")
+let func = Fun(Var "H_arg", body)
+let exp = Let (Var "s", Num 10)
+let app = App (func, exp)
 
+let program = [app]
 let finalTenv =
     program
     |> List.fold (fun accumulatedTenv currentExp -> bindExp currentExp accumulatedTenv) tenv

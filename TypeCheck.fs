@@ -1,9 +1,6 @@
 module TypeCheck
-open System
-open System.IO
 open TypeEnv
 open AbSyn
-open Lexer
 open TypeInference
 
 exception TypeError of string 
@@ -98,23 +95,33 @@ let rec hastype tenv exp inferredType =
     | App (e1, e2) ->
         match inferredType with 
         | High -> // if t2 is high, then e1 can either be high -> high or low -> high
-            let highToHigh = hastype tenv e1 (Arr (High, High)) 
-            let lowToHigh =  hastype tenv e1 (Arr (Low, High))
-            if highToHigh then 
-                let t2 = hastype tenv e2 High
-                let res = highToHigh && t2
-                if res then res else raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
-            elif lowToHigh then
-                let t2 = hastype tenv e2 Low
-                let res = lowToHigh && t2
-                res
-            else
-                raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
+            try
+                let highToHigh = hastype tenv e1 (Arr (High, High)) 
+                let lowToHigh =  hastype tenv e1 (Arr (Low, High))
+                if highToHigh then 
+                    let t2 = hastype tenv e2 High
+                    let res = highToHigh && t2
+                    if res then res else raise (TypeError ($"Illegal types: Fun (High -> High) applied to arg (Low)"))
+                elif lowToHigh then
+                    let t2 = hastype tenv e2 Low
+                    let res = lowToHigh && t2
+                    res
+                else
+                    raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
+            with
+            | :? TypeError as ex -> 
+                printfn "%s" ex.Message
+                false
         | Low -> 
-            let t1 = hastype tenv e1 (Arr (Low, Low)) || hastype tenv e1 (Arr (High, Low))
-            let t2 = hastype tenv e2 High
-            let res = t1 && not t2
-            if res then res else raise (TypeError ("Illegal types " + $"'{expressionToString e1}' applied to '{expressionToString e2}'"))
+            try
+                let t1 = hastype tenv e1 (Arr (Low, Low)) || hastype tenv e1 (Arr (High, Low))
+                let t2 = hastype tenv e2 High
+                let res = t1 && not t2
+                if res then res else raise (TypeError ("Illegal implicit flow in function " + $"'{expressionToString e1}' when applied to '{expressionToString e2}'"))
+            with
+            | :? TypeError as ex -> 
+                printfn "%s" ex.Message
+                false
         | _ -> false
 
     | Fun (e1, e2) ->
