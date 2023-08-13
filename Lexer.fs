@@ -3,7 +3,6 @@ module Lexer
 open System.Text.RegularExpressions
 open AbSyn
 
-
 type Token =
     | NUM of int * Position
     | VAR of string * Position
