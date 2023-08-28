@@ -180,6 +180,9 @@ let parse (tokens: Token list) =
         | LET pos :: VAR (v, _) :: EQUAL _ :: rest ->
             let (expr, rest) = parseExpr rest
             (Let (Var v, expr), rest)
+        | LET pos :: VAR (v, _) :: DOT _ :: VAR(v1, _) :: EQUAL _ :: rest ->
+            let (expr, rest) = parseExpr rest
+            (Let (Var v, expr), rest)
         | IF pos :: rest ->
             let (cond, rest) = parseExpr rest
             let thenStmt, rest = 

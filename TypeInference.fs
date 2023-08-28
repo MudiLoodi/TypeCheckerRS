@@ -30,7 +30,7 @@ let rec findtype tenv exp =
         let e3_type = findtype tenv e3
         match (e1_type, e2_type, e3_type) with 
             | (High, _, _) -> High
-            | (Low, _, _) -> Low
+            | (Low, _, _)  -> Low
     | Fun (e1, e2) ->
         let e1_type = findtype tenv e1
         let e2_type = findtype tenv e2

@@ -17,8 +17,21 @@ let readAndParseLinesFromFile (filePath: string) =
         lines.Add(exp)
     List.ofSeq lines  // Convert lines to a list
 
-let filePath = "tests/tests"
-let program = readAndParseLinesFromFile filePath
+// let filePath = "tests/test0"
+
+
+let exp1    = Let (Var "H_a", Num 5)
+let exp2    = Let (Var "H_b", Num 6)
+let cond    = Operate (Greater, Var "H_x", Num 0)
+let ifexp   = If (cond, exp1, exp2)
+let f       = Fun(Var "H_x", ifexp)
+let exp3    = Let (Var "H_y", Num 10)
+let app     = App (f, exp3)
+
+let assign = Let (Var "res", app)
+let program = [assign]
+
+// let program = readAndParseLinesFromFile filePath
 
 let finalTenv =
     program
@@ -30,9 +43,13 @@ let (TypeEnv EnvLst) = finalTenv
 let run program =
     let filePath = "tests/testResult"
     let writer = File.CreateText(filePath)
+    use fileStream = new StreamReader("tests/test0")
+    let progrmaContent = fileStream.ReadToEnd() // Read and return the entire file content as a string
+    printfn "\nProgram: \n--------------------------------------------------------------\n%s\n--------------------------------------------------------------" progrmaContent
     for e in program do
         let inferredType = findtype finalTenv e 
-        // printfn "%A: %A" e inferredType
+        printfn "\n* Expression: %A" e
+        printfn "- Inferred Type: %A\n" inferredType
         let typeCheckResult = hastype finalTenv e inferredType
         match typeCheckResult with 
         | true  -> writer.WriteLine("PASS")

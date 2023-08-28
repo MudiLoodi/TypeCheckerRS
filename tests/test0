@@ -1,0 +1,5 @@
+let name = "Joe"
+let H_CPR = 1711662691
+let H_age = 57
+record person = firstName: name, CPR: H_CPR, age: H_age, height: 180
+if (person.age < 60) then let old = 1 else let old = 0 
