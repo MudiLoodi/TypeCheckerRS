@@ -1,14 +1,5 @@
-
-
-.fake
-
-eksempel.fs
 TODO
 bin
 obj
-examples
-lexerOLD
-p
-typecheker backup
-lexer V2
-t
+.vscode
+.fake

@@ -38,9 +38,13 @@ let rec bindExp e (TypeEnv envtab) =
         let res3 = bindExp e3 res2
         res3
     | Fun (e1, e2) -> 
-        let res1 = bindExp e1 (TypeEnv envtab)
+        let localTEnv = []
+        let res1 = bindExp e1 (TypeEnv localTEnv)
         let res2 = bindExp e2 res1
-        res2
+        match (envtab, res2) with
+        | (ttab1, TypeEnv ttab2) ->
+            let combinedTTab = ttab2 @ ttab1  // Concatenate the local tenv to the global tenv
+            TypeEnv combinedTTab
     | App (e1, e2) ->
         let res1 = bindExp e1 (TypeEnv envtab)
         let res2 = bindExp e2 res1
